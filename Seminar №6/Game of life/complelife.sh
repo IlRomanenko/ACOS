@@ -1,0 +1,1 @@
+g++ -std=c++11  -pthread -lGL -lglut gamelife.cpp -o gamelife 
