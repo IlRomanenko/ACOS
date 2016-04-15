@@ -16,8 +16,8 @@ void ls(const char* directory, int tabs)
     DIR *dir = opendir(directory);
     if (dir == NULL)
         return;
-    struct dirent *ent;   
-    while((ent = readdir(dir)) != NULL)
+    struct dirent *ent;
+    while ((ent = readdir(dir)) != NULL)
     {
         char *s, *ts;
         if (ent->d_name[0] == '.')
@@ -38,7 +38,7 @@ void ls(const char* directory, int tabs)
 
 
 int main(int argc, char** argv)
-{   
+{
     if (argc != 1)
         ls(argv[1], 0);
     else

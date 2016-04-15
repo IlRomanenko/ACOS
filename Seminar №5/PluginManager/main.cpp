@@ -11,7 +11,7 @@ int main()
 
 
     IPlugin *first_p, *second_p;
-    
+
     auto first_dll = (init_dll)getFunction(first, "Init");
     first_p = first_dll();
     auto second_dll = (init_dll)getFunction(second, "Init");

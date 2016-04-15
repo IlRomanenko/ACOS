@@ -31,27 +31,27 @@ int main()
 {
     string s;
 
-   // while (true)
+    // while (true)
     {
         getline(cin, s);
-       // cout << s << endl;
-     //   if (s == "exit")
-     //       break;
+        // cout << s << endl;
+      //   if (s == "exit")
+      //       break;
         int res = fork();
         if (res == 0)
         {
-        	//cout << "ok" << endl;
+            //cout << "ok" << endl;
             auto argv = split(s);
             if (argv.size() == 0)
-            	exit(0);
+                exit(0);
             string name = argv.front();
             {
-            	FILE *prog = fopen(name.c_str(), "r");
-            	if (prog == NULL)
-            	{
-            		fclose(prog);
-            		exit(0);
-            	}
+                FILE *prog = fopen(name.c_str(), "r");
+                if (prog == NULL)
+                {
+                    fclose(prog);
+                    exit(0);
+                }
             }
             argv.pop();
             vector<string> params{ name };
@@ -77,14 +77,14 @@ int main()
                     dup2(descr_out, dst_out);
                 }
                 else
-                	params.push_back(s);
+                    params.push_back(s);
             }
             char **prms = new char*[params.size()];
             for (int i = 0; i < (int)params.size(); i++)
             {
-            	prms[i] = new char[params[i].size() + 1];
-            	strcpy(prms[i], params[i].c_str());
-            	cout << params[i] <<  "//";
+                prms[i] = new char[params[i].size() + 1];
+                strcpy(prms[i], params[i].c_str());
+                cout << params[i] << "//";
             }
             cout << endl;
             execve(name.c_str(), prms, NULL);
