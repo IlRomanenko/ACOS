@@ -1,0 +1,1 @@
+g++ chat.cpp -Wall -lpthread -o chat
