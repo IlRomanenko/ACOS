@@ -6,9 +6,10 @@
 #include <algorithm>
 #include <unistd.h>
 #include <semaphore.h>
-
+#include "Visualizer.h"
 
 using namespace std;
+using namespace visualizer;
 
 const int maxn = 32, thread_count = 4;
 const int part = maxn / thread_count;
@@ -63,6 +64,22 @@ inline void set(int x, int y, bool **from, bool** to)
 	}
 } 
 
+void render()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+
+	double len = Map_Width / (double)maxn;
+	SetColor(0.0, 1.0, 0.5);
+	for (int i = 0; i < maxn; i++)
+		for (int j = 0; j < maxn; j++)
+		{
+			DrawRectangle(i * len, j * len, len, len);
+		}
+
+	glutSwapBuffers();
+}
+
 struct send_data
 {
 	int from_row, to_row;
@@ -86,6 +103,10 @@ void* recalc(void * data)
 
 int main(int argc, char** argv)
 {	
+	pthread_t temp;
+
+	pthread_create(&temp, NULL, InitializeViz, new initializer_thread_data(argc, argv));
+
 	life = new bool*[maxn];
 	buf = new bool*[maxn];
 	for (int i = 0; i < maxn; i++)
@@ -105,7 +126,6 @@ int main(int argc, char** argv)
 
 	bool ** first = life, **second = buf;
 
-	pthread_t temp;
 	
 	for (;;)
 	{
@@ -131,11 +151,8 @@ int main(int argc, char** argv)
 
 		cur_life = first;
 
-		cout << endl << endl << endl;
-		cout << endl << endl << endl;
-		cout << endl << endl << endl;
-		cout << endl << endl << endl;		cout << endl << endl << endl;
-
+		for (int i = 0; i < 16; i++)
+			cout << endl;
 
 		for (int i = 0; i < maxn; i++)
 		{

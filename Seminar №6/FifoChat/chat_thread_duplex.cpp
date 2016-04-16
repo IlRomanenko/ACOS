@@ -13,6 +13,7 @@ using namespace std;
 
 
 #define server_client "sc"
+#define client_server "cs"
 
 
 void SendData(int fout, const string& str)
@@ -93,13 +94,12 @@ void Client()
 
 int main(int argc, char **argv)
 {
-	if (argc != 3)
+	if (argc != 2)
 	{
 		puts("Error! Arguments wasn't found\n");
 		exit(-1);
 	}
 	string name_pr(argv[1]);
-	string chat_number(argv[2]);
 
 	if (name_pr == "server")
 	{

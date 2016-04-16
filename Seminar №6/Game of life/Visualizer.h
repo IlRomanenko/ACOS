@@ -1,8 +1,6 @@
 #pragma once
 #define _USE_MATH_DEFINES
 #include <GL/freeglut.h>
-#include <GL/glu.h>
-//#include <GL/gl.h>
 #include <cmath>
 using namespace std;
 
@@ -11,11 +9,18 @@ enum constants
     Window_Width = 800,
     Window_Height = 800,
     Map_Width = 800,   //may be different from Window_Width
-    Map_Height = 800, //as Map_Width
+    Map_Height = Map_Width, //as Map_Width
 
 };
 
-extern void render();
+struct initializer_thread_data
+{
+    int argc;
+    char **argv;
+    initializer_thread_data(int _argc, char** _argv) : argc(_argc), argv(_argv) { }
+};
+
+void render();
 
 namespace visualizer
 {
@@ -63,11 +68,14 @@ namespace visualizer
     void timer_redisplay(int)
     {
         glutPostRedisplay();
-        glutTimerFunc(100, timer_redisplay, 0);
+        glutTimerFunc(16, timer_redisplay, 0);
     }
 
-    void InitializeViz(int argc, char** argv)
+    void* InitializeViz(void *data)
     {
+        initializer_thread_data* cur_data = (initializer_thread_data*)data;
+        int argc = cur_data->argc;
+        char **argv = cur_data->argv;
         glutInit(&argc, argv);
         glutInitWindowSize(Window_Width, Window_Height);
         glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
@@ -81,5 +89,7 @@ namespace visualizer
         glutDisplayFunc(render);
         glutTimerFunc(100, timer_redisplay, 0);
         glutMainLoop();
+        delete cur_data;
+        return NULL;
     }
 };

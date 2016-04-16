@@ -1,1 +1,1 @@
-g++ chat.cpp -Wall -lpthread -o chat
+g++ chat_thread_duplex.cpp -Wall -lpthread -o chat
