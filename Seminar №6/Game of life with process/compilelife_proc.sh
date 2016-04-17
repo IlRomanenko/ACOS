@@ -1,0 +1,1 @@
+g++ -std=c++11 -lrt -pthread gamelife_proc.cpp -o gamelife_proc 
