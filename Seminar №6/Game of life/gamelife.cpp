@@ -74,7 +74,8 @@ void render()
     for (int i = 0; i < maxn; i++)
         for (int j = 0; j < maxn; j++)
         {
-            DrawRectangle(i * len, j * len, len, len);
+            if (cur_life[i][j])
+                DrawRectangle(i * len, j * len, len, len);
         }
 
     glutSwapBuffers();
