@@ -67,11 +67,11 @@ vector<string> ListOfPlugins()
     int len;
     while ((end = readdir(dir)) != NULL)
     {
-    	len = strlen(end->d_name);
-    	if (len > 2 && end->d_name[len - 3] == '.' && end->d_name[len - 2] == 's' && end->d_name[len - 1] == 'o')
-    	{
-    		res.push_back("Plugins/" + string(end->d_name));
-    	}
+        len = strlen(end->d_name);
+        if (len > 2 && end->d_name[len - 3] == '.' && end->d_name[len - 2] == 's' && end->d_name[len - 1] == 'o')
+        {
+            res.push_back("Plugins/" + string(end->d_name));
+        }
     }
     return res;
 }

@@ -13,6 +13,6 @@ using namespace std;
 
 extern "C"
 {
- 	DLL_EXPORT IPlugin* Init();
+    DLL_EXPORT IPlugin* Init();
     DLL_EXPORT void Release(IPlugin*);
 }
