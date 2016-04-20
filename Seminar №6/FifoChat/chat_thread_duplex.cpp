@@ -8,19 +8,26 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <semaphore.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <string.h>
+
 
 using namespace std;
 
 
-#define server_client "sc"
-#define client_server "cs"
+const char* client_read_name = "/clientcanread";
+const char* server_read_name = "/servercanread";
+const char* fifo_name = "chatfifo";
 
+sem_t *client_can_read, *server_can_read;
 
 void SendData(int fout, const string& str)
 {
     int len = str.length();
     write(fout, &len, sizeof(int));
-    write(fout, str.c_str(), str.length());
+    write(fout, str.c_str(), str.length() * sizeof(char));
 }
 
 void ReceiveData(int fin, string& str)
@@ -33,67 +40,116 @@ void ReceiveData(int fin, string& str)
     delete buf;
 }
 
-struct thread_data
+void check_sem_open(sem_t * semaphore)
 {
-    const char *filename;
-    thread_data (const char* str) : filename(str) { }
-};
+    if (semaphore == SEM_FAILED)
+    {
+        cout << strerror(errno) << endl;;
+        exit(0);
+    }
+}
 
 void* PendingData(void* data)
 {
-    const char *filename = ((thread_data*)data)->filename;
-    cout << "Wait for connection" << endl;
-    int fin = open(filename, O_RDONLY);
+    int fin = open(fifo_name, O_RDWR);
+    bool is_server = *((bool*)data);
+    if (is_server) 
+    {
+        server_can_read = sem_open(server_read_name, 0, 0666, -1);
+        check_sem_open(server_can_read);
+    }
+    else
+    {
+        client_can_read = sem_open(client_read_name, 0, 0666, -1);
+        check_sem_open(client_can_read);
+    }
+
     cout << "Ready :)" << endl;
     string str;
     while (str != "Goodbye")
     {
+        if (is_server)
+            sem_wait(server_can_read);
+        else
+            sem_wait(client_can_read);
+
+
         ReceiveData(fin, str);
         cout << "He : " << str << endl;
     }
+
+    if (is_server)
+        sem_close(server_can_read);
+    else
+        sem_close(client_can_read);
+    
     close(fin);
-    delete (thread_data*)data;
     return NULL;
 }
 
 void* UserInput(void* data)
 {
-    const char* filename = ((thread_data*)data)->filename;
-    cout << "Wait for connection" << endl;
-    int fout = open(filename, O_WRONLY);
+    int fout = open(fifo_name, O_RDWR);
+
+    bool is_server = *((bool*)data);
+    if (is_server) 
+    {
+        client_can_read = sem_open(client_read_name, 0666);
+        check_sem_open(client_can_read);
+    }
+    else
+    {
+        server_can_read = sem_open(server_read_name, 0666);
+        check_sem_open(server_can_read);
+    }
+
     cout << "Ready :)" << endl;
     string str;
     while (str != "Goodbye")
     {
         getline(cin, str);
         SendData(fout, str);
+        if (is_server)
+            sem_post(client_can_read);
+        else
+            sem_post(server_can_read);
     }
-
+    if (is_server)
+        sem_close(client_can_read);
+    else
+        sem_close(server_can_read);
     close(fout);
-    delete (thread_data*)data;
     return NULL;
 }
 
 void Server()
 {
-    mkfifo((server_client), 0777); //as usual file
-    mkfifo((client_server), 0777); //as usual file
+    mkfifo(fifo_name, 0777); //as usual file
     pthread_t temp;
-    pthread_create(&temp, NULL, PendingData, new thread_data(client_server));
-    UserInput(new thread_data(server_client));
+    bool* is_server = new bool;
+    *is_server = true;
+    pthread_create(&temp, NULL, PendingData, is_server);
+    UserInput(is_server);
 }
 
 void Client()
 {
-    mkfifo((server_client), 0777); //as usual file
-    mkfifo((client_server), 0777); //as usual file
+    mkfifo(fifo_name, 0777); //as usual file
     pthread_t temp;
-    pthread_create(&temp, NULL, UserInput, new thread_data(client_server));
-    PendingData(new thread_data(server_client));
+    bool* is_server = new bool;
+    *is_server = false;
+    pthread_create(&temp, NULL, PendingData, is_server);
+    UserInput(is_server);
 }
 
 int main(int argc, char **argv)
 {
+    client_can_read = sem_open(client_read_name, O_CREAT, 0666, 0);
+    sem_close(client_can_read);
+
+    server_can_read = sem_open(server_read_name, O_CREAT, 0666, 0);
+    sem_close(server_can_read);
+
     if (argc != 2)
     {
         puts("Error! Arguments wasn't found\n");

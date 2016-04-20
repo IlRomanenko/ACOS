@@ -18,7 +18,6 @@ const int part = maxn / thread_count;
 bool **life, **buf, **cur_life;
 int offset[] = {-1, 0, 1};
 
-pthread_mutex_t mutx;
 sem_t semap_end;
 
 inline void set(int x, int y, bool **from, bool** to)

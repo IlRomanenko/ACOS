@@ -19,7 +19,6 @@ void dfs(int vertex, string name, int tabs = 0)
     }
     vector<pair<int, string> > vp = g[vertex];
     for (int i = 0; i < (int)vp.size(); i++)
-
         dfs(vp[i].first, vp[i].second, tabs + 1);
 }
 
