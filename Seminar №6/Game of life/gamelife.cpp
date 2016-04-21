@@ -11,7 +11,7 @@
 using namespace std;
 using namespace visualizer;
 
-const int maxn = 32, thread_count = 4;
+const int maxn = 512, thread_count = 4;
 const int part = maxn / thread_count;
     
 
@@ -130,7 +130,7 @@ int main(int argc, char** argv)
     for (;;)
     {
 
-        sem_init(&semap_end, 0, -thread_count);
+        sem_init(&semap_end, 0, 0);
 
         for (int i = 0; i < thread_count; i++)
         {
@@ -146,11 +146,11 @@ int main(int argc, char** argv)
 
             pthread_create(&temp, NULL, recalc, cur_data);
         }
-
-        sem_wait(&semap_end);
+        for (int i = 0; i  < thread_count; i++)
+            sem_wait(&semap_end);
 
         cur_life = first;
-
+/*
         for (int i = 0; i < 16; i++)
             cout << endl;
 
@@ -164,7 +164,7 @@ int main(int argc, char** argv)
                     cout << " ";
             }
             cout << endl;
-        }
+        }*/
         usleep(200 * 1000);
         swap(first, second);
     }

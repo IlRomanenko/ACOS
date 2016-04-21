@@ -14,6 +14,7 @@
 #include <sys/wait.h>
 #include <errno.h>
 #include <string.h>
+#include <sys/mman.h>
 using namespace std;
 
 #define Semaphore_Name "/gameoflife"
@@ -115,55 +116,25 @@ int main(int argc, char** argv)
 
     cout.precision(8);
     cout.setf(cout.fixed);
-    if (argc != 1)
+    shm_handle = shm_open("/gamelife", O_RDWR | O_CREAT, 0777);
+    ftruncate(shm_handle, sizeof(life_data));
+    //shm_handle = shmget(cur_pid, sizeof(life_data), IPC_CREAT | 0777);
+    if (shm_handle < 0)
     {
-        cur_pid = atoi(argv[1]);
-        shm_handle = shmget(cur_pid, sizeof(life_data), 0777);
+        cout << "Can't create shared memory segment" << endl;
+        cout << strerror(errno) << endl;;
+        return 0;
     }
-    else
-    {
-        shm_handle = shmget(cur_pid, sizeof(life_data), IPC_CREAT | 0777);
-        if (shm_handle < 0)
-        {
-            cout << "Can't create shared memory segment" << endl;
-            cout << strerror(errno) << endl;;
-            return 0;
-        }
-    }
-    life_data* cur_data = (life_data*)shmat(shm_handle, NULL, 0);
+    life_data* cur_data = (life_data*)mmap(
+        NULL, sizeof(life_data), PROT_WRITE,
+        MAP_SHARED,  shm_handle, 0);
+    
+    //life_data* cur_data = (life_data*)shmat(shm_handle, NULL, 0);
     if (cur_data == (life_data*)-1)
     {
         cout << "Can't attach shared memory segment" << endl;
         return 0;
     }
-    
-    if (argc != 1)
-    {
-        send_data *sn_data = new send_data();
-        if (cur_data->is_first)
-        {
-            sn_data->from = cur_data->life;
-            sn_data->to = cur_data->buf;
-        }
-        else
-        {
-            sn_data->from = cur_data->buf;
-            sn_data->to = cur_data->life;
-        }
-        sn_data->from_row = atoi(argv[2]);
-        sn_data->to_row = atoi(argv[3]);
-        recalc(sn_data);
-        shmdt(cur_life);
-        semap_end = sem_open(Semaphore_Name, 0666);
-        if (semap_end == SEM_FAILED)
-        {
-            cout << strerror(errno) << endl;;
-            return 0;
-        }
-        sem_post(semap_end);
-        return 0;
-    }
-
 
     srand(time(NULL));
 
@@ -183,13 +154,11 @@ int main(int argc, char** argv)
     int reset_fork, status;
 
     semap_end = sem_open(Semaphore_Name, O_CREAT, 0666, 0);
-    sem_close(semap_end);
     for (;;)
     {
-        semap_end = sem_open(Semaphore_Name, O_CREAT, 0666, -proc_count);
         if (semap_end == SEM_FAILED)
         {
-            cout << strerror(errno) << endl;;
+            cout << strerror(errno) << endl;
             return 0;
         }
         time_begin_calc = clock();
@@ -203,12 +172,19 @@ int main(int argc, char** argv)
                     right = (i + 1) * part;
                 else
                     right = maxn;
-                
-                execl(argv[0], argv[0], to_string(cur_pid).c_str(),
-                 to_string(left).c_str(), to_string(right).c_str(), NULL);
+
+                send_data *sn_data = new send_data();
+                sn_data->from = first;
+                sn_data->to = second;
+                sn_data->from_row = left;
+                sn_data->to_row = right;
+                recalc(sn_data);
+                sem_post(semap_end);
+                return 0;
             }
         }
-        sem_wait(semap_end);
+        for (int i = 0; i < proc_count; i++)
+            sem_wait(semap_end);
         
         time_end_calc = clock();
 

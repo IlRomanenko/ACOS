@@ -19,9 +19,10 @@ using namespace std;
 
 const char* client_read_name = "/clientcanread";
 const char* server_read_name = "/servercanread";
+const char* fifo_busy_name = "/chatfifobusy";
 const char* fifo_name = "chatfifo";
 
-sem_t *client_can_read, *server_can_read;
+sem_t *client_can_read, *server_can_read, *fifo_busy;
 
 void SendData(int fout, const string& str)
 {
@@ -40,7 +41,7 @@ void ReceiveData(int fin, string& str)
     delete buf;
 }
 
-void check_sem_open(sem_t * semaphore)
+void check_sem_open(sem_t* semaphore)
 {
     if (semaphore == SEM_FAILED)
     {
@@ -53,71 +54,65 @@ void* PendingData(void* data)
 {
     int fin = open(fifo_name, O_RDWR);
     bool is_server = *((bool*)data);
-    if (is_server) 
-    {
-        server_can_read = sem_open(server_read_name, 0, 0666, -1);
-        check_sem_open(server_can_read);
-    }
-    else
-    {
-        client_can_read = sem_open(client_read_name, 0, 0666, -1);
-        check_sem_open(client_can_read);
-    }
-
     cout << "Ready :)" << endl;
     string str;
     while (str != "Goodbye")
     {
         if (is_server)
-            sem_wait(server_can_read);
+        {
+            if (sem_wait(server_can_read) < 0)
+                perror("sem_wait");
+        }
         else
-            sem_wait(client_can_read);
-
+        {
+            if (sem_wait(client_can_read) < 0)
+                perror("sem_wait");
+        }
+        
+        sem_wait(fifo_busy);
 
         ReceiveData(fin, str);
         cout << "He : " << str << endl;
+
+        sem_post(fifo_busy);
     }
 
-    if (is_server)
+    /*if (is_server)
         sem_close(server_can_read);
     else
         sem_close(client_can_read);
-    
-    close(fin);
+    sem_close(fifo_busy);
+    close(fin);*/
     return NULL;
 }
 
 void* UserInput(void* data)
 {
     int fout = open(fifo_name, O_RDWR);
-
     bool is_server = *((bool*)data);
-    if (is_server) 
-    {
-        client_can_read = sem_open(client_read_name, 0666);
-        check_sem_open(client_can_read);
-    }
-    else
-    {
-        server_can_read = sem_open(server_read_name, 0666);
-        check_sem_open(server_can_read);
-    }
 
     cout << "Ready :)" << endl;
     string str;
     while (str != "Goodbye")
     {
         getline(cin, str);
+        
+        sem_wait(fifo_busy);
+
         SendData(fout, str);
+
         if (is_server)
             sem_post(client_can_read);
         else
             sem_post(server_can_read);
+
+        sem_post(fifo_busy);
     }
     if (is_server)
         sem_close(client_can_read);
     else
         sem_close(server_can_read);
+    sem_close(fifo_busy);
     close(fout);
     return NULL;
 }
@@ -130,6 +125,7 @@ void Server()
     *is_server = true;
     pthread_create(&temp, NULL, PendingData, is_server);
     UserInput(is_server);
+    //PendingData(is_server);
 }
 
 void Client()
@@ -144,12 +140,24 @@ void Client()
 
 int main(int argc, char **argv)
 {
-    client_can_read = sem_open(client_read_name, O_CREAT, 0666, 0);
-    sem_close(client_can_read);
 
-    server_can_read = sem_open(server_read_name, O_CREAT, 0666, 0);
-    sem_close(server_can_read);
+    client_can_read = sem_open(client_read_name, O_CREAT | O_EXCL, 0777, 0);
+    if (client_can_read == SEM_FAILED)
+        client_can_read = sem_open(client_read_name, 0);
+    check_sem_open(client_can_read);
 
+
+    server_can_read = sem_open(server_read_name, O_CREAT | O_EXCL, 0777, 0);
+    if (server_can_read == SEM_FAILED)
+        server_can_read = sem_open(server_read_name, 0);
+    check_sem_open(server_can_read);
+
+
+    fifo_busy = sem_open(fifo_busy_name, O_CREAT, 0777, 1);
+    if (fifo_busy == SEM_FAILED)
+        fifo_busy = sem_open(fifo_busy_name, 0);
+    check_sem_open(fifo_busy);
+    
     if (argc != 2)
     {
         puts("Error! Arguments wasn't found\n");
@@ -170,7 +178,6 @@ int main(int argc, char **argv)
         puts("Unknow argument\n");
         exit(-1);
     }
-    remove(client_server);
-    remove(server_client);
+    
     return 0;
 }
