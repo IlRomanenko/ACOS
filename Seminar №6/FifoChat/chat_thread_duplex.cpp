@@ -81,8 +81,8 @@ void* PendingData(void* data)
         sem_close(server_can_read);
     else
         sem_close(client_can_read);
-    sem_close(fifo_busy);
-    close(fin);*/
+    sem_close(fifo_busy);*/
+    close(fin);
     return NULL;
 }
 
@@ -108,11 +108,11 @@ void* UserInput(void* data)
 
         sem_post(fifo_busy);
     }
-    if (is_server)
+    /*if (is_server)
         sem_close(client_can_read);
     else
         sem_close(server_can_read);
-    sem_close(fifo_busy);
+    sem_close(fifo_busy);*/
     close(fout);
     return NULL;
 }
@@ -125,7 +125,7 @@ void Server()
     *is_server = true;
     pthread_create(&temp, NULL, PendingData, is_server);
     UserInput(is_server);
-    //PendingData(is_server);
+    pthread_cancel(temp);
 }
 
 void Client()
@@ -136,6 +136,7 @@ void Client()
     *is_server = false;
     pthread_create(&temp, NULL, PendingData, is_server);
     UserInput(is_server);
+    pthread_cancel(temp);
 }
 
 int main(int argc, char **argv)

@@ -74,12 +74,17 @@ tree:
 	call concat
 	movl %eax, -20(%ebp)
 	addl $8, %esp
+	subl $1, %ebx #ent->d_type
+	movzbl (%ebx), %eax 
+	cmpl $4, %eax
+	jne .after_tree_call
 	movl 12(%ebp), %eax
 	addl $1, %eax
 	pushl %eax
 	pushl -20(%ebp)
 	call tree
 	addl $8, %esp
+.after_tree_call:
 	pushl -16(%ebp)
 	call free
 	pushl -20(%ebp)

@@ -118,18 +118,17 @@ int main(int argc, char** argv)
     cout.setf(cout.fixed);
     shm_handle = shm_open("/gamelife", O_RDWR | O_CREAT, 0777);
     ftruncate(shm_handle, sizeof(life_data));
-    //shm_handle = shmget(cur_pid, sizeof(life_data), IPC_CREAT | 0777);
     if (shm_handle < 0)
     {
         cout << "Can't create shared memory segment" << endl;
         cout << strerror(errno) << endl;;
         return 0;
     }
+    
     life_data* cur_data = (life_data*)mmap(
         NULL, sizeof(life_data), PROT_WRITE,
         MAP_SHARED,  shm_handle, 0);
     
-    //life_data* cur_data = (life_data*)shmat(shm_handle, NULL, 0);
     if (cur_data == (life_data*)-1)
     {
         cout << "Can't attach shared memory segment" << endl;

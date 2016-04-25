@@ -33,9 +33,9 @@ void check_sem_open(sem_t* semaphore)
 int main(int argc, char** argv)
 {
 
-const char* client_read_name = "/clientcanread";
-const char* server_read_name = "/servercanread";
-const char* fifo_busy_name = "/chatfifobusy";
+	const char* client_read_name = "/clientcanread";
+	const char* server_read_name = "/servercanread";
+	const char* fifo_busy_name = "/chatfifobusy";
 	sem_unlink(client_read_name);
 	sem_unlink(server_read_name);
 	sem_unlink(fifo_busy_name);

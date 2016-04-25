@@ -173,6 +173,10 @@ tree:
 	movl %eax, -20(%ebp)
 	addl $8, %esp
 
+	subl $1, %ebx #ent->d_type
+	movzbl (%ebx), %eax 
+	cmpl $4, %eax
+	jne .after_tree_call
 
 	movl 12(%ebp), %eax
 	addl $1, %eax
@@ -185,6 +189,7 @@ tree:
 
 	#printf_mes $message, -20(%ebp)
 
+.after_tree_call:
 
 	pushl -16(%ebp)
 	call free

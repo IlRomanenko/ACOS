@@ -28,7 +28,8 @@ void ls(const char* directory, int tabs)
         printf("%s\n", ent->d_name);
         ts = concat(directory, "/");
         s = concat(ts, ent->d_name);
-        ls(s, tabs + 1);
+        if (ent->d_type == DT_DIR)
+            ls(s, tabs + 1);
         free(ts);
         free(s);
     }
