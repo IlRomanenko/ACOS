@@ -4,6 +4,6 @@
 int main(int argc, char** argv)
 {
     fork();
-    execl("fork.out", "", NULL);
+    execl("fork.out", "fork.out", NULL);
     return 0;
 }

@@ -13,7 +13,7 @@ using namespace visualizer;
 
 const int maxn = 512, thread_count = 4;
 const int part = maxn / thread_count;
-    
+
 
 bool **life, **buf, **cur_life;
 int offset[] = {-1, 0, 1};
@@ -150,7 +150,8 @@ int main(int argc, char** argv)
             sem_wait(&semap_end);
 
         cur_life = first;
-/*
+        
+        /*
         for (int i = 0; i < 16; i++)
             cout << endl;
 
@@ -165,10 +166,10 @@ int main(int argc, char** argv)
             }
             cout << endl;
         }*/
+        
         usleep(200 * 1000);
         swap(first, second);
     }
 
     return 0;
 }
-

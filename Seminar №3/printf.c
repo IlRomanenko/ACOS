@@ -42,7 +42,7 @@ void mprintf(const char *str, ...)
 int main()
 {
 
-    mprintf("Hello world %d %f\n", 123, 0.92);
+    mprintf("Hello world %d %d\n", 12321312, 1);
 
     getchar();
     return 0;

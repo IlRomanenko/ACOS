@@ -1,0 +1,1 @@
+g++ -Wall -O2 netcat.cpp -o netcat
