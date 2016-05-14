@@ -154,7 +154,7 @@ int main(int argc, char **argv)
     check_sem_open(server_can_read);
 
 
-    fifo_busy = sem_open(fifo_busy_name, O_CREAT, 0777, 1);
+    fifo_busy = sem_open(fifo_busy_name, O_CREAT | O_EXCL, 0777, 1);
     if (fifo_busy == SEM_FAILED)
         fifo_busy = sem_open(fifo_busy_name, 0);
     check_sem_open(fifo_busy);

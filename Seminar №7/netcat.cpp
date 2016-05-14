@@ -54,14 +54,14 @@ int main(int argc, char** argv)
     memset(&hints, 0, sizeof(addrinfo));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
-    hints.ai_protocol = 0;
+    hints.ai_protocol = IPPROTO_TCP;
     hints.ai_canonname = NULL;
     hints.ai_addr = NULL;
     hints.ai_next = NULL;
 
     int socket_fd = -1, rc = 0;
 
-    rc = getaddrinfo(argv[1], argv[2], NULL, &result);
+    rc = getaddrinfo(argv[1], argv[2], &hints, &result);
     if (rc != 0)
     {
         cout << "rc = " << rc << endl;
@@ -87,8 +87,6 @@ int main(int argc, char** argv)
         exit(0);
     }
 
-
-    string addres(argv[1]);
 
     write(socket_fd, query.c_str(), query.length());
 

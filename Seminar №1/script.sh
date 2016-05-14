@@ -1,5 +1,5 @@
 function genQuery {
-    echo -e "GET " $2 " HTTP/1.1\nHost: "\
+    echo -e "GET " $2 " HTTP/1.0\nHost: "\
      $1 "\nAccept: text/html\nConnection: close\n\n"  >query
 }
 
