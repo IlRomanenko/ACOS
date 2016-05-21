@@ -11,6 +11,7 @@
 #include <sys/time.h>
 #include <netdb.h>
 #include <errno.h>
+#include <pthread.h>
 using namespace std;
 
 void check_error(int rc)
@@ -25,46 +26,24 @@ void check_error(int rc)
 const int BUF_SIZE = 1024;
 
 char text[BUF_SIZE];
+int socket_fd;
 
-
-
-string readAll()
+int ConnectToHostPort(string host, string port)
 {
-    string res = "", t;
-    while (!cin.eof())
-    {
-        getline(cin, t);
-        res += t + "\n";
-    }
-    return res;
-}
-
-int main(int argc, char** argv)
-{
-    if (argc != 3)
-    {
-        cout << "Wrong amount of arguments" << endl;
-        cout << "Use as <hostname> <port>" << endl;
-        exit(0);
-    }
-
-    string query = readAll();
-
+    int socket_fd = -1, rc;
+    
     addrinfo hints, *result, *rp;
     memset(&hints, 0, sizeof(addrinfo));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
-    hints.ai_protocol = IPPROTO_TCP;
+    hints.ai_protocol = 0;
     hints.ai_canonname = NULL;
     hints.ai_addr = NULL;
     hints.ai_next = NULL;
+    rc = getaddrinfo(host.c_str(), port.c_str(), &hints, &result);
 
-    int socket_fd = -1, rc = 0;
-
-    rc = getaddrinfo(argv[1], argv[2], &hints, &result);
     if (rc != 0)
     {
-        cout << "rc = " << rc << endl;
         cout << "getaddrinfo: " << gai_strerror(rc) << endl;
         exit(-1);
     }
@@ -83,15 +62,41 @@ int main(int argc, char** argv)
     freeaddrinfo(result);
     if (socket_fd == -1)
     {
-        cout << "Can't connect to " << argv[1] << endl;
+        cout << "Can't connect to " << host << " with port = " << port << endl;
+        exit(-1);
+    }
+
+    return socket_fd;
+}
+
+void* UserInput(void*)
+{
+    string str;
+    while (true)
+    {
+        getline(cin, str);
+        str += "\n";
+        write(socket_fd, str.c_str(), str.length());
+    }
+}
+
+int main(int argc, char** argv)
+{
+    if (argc != 3)
+    {
+        cout << "Wrong amount of arguments" << endl;
+        cout << "Use as <hostname> <port>" << endl;
         exit(0);
     }
 
+    socket_fd = ConnectToHostPort(string(argv[1]), string(argv[2]));
 
-    write(socket_fd, query.c_str(), query.length());
+    pthread_t temp;
+
+    pthread_create(&temp, NULL, UserInput, NULL);
 
     int nread;
-    while ((nread = recv(socket_fd, text, BUF_SIZE, MSG_WAITALL)) > 0)
+    while ((nread = recv(socket_fd, text, BUF_SIZE, 0)) > 0)
     {
         for (int i = 0; i < nread; i++)
             putchar(text[i]);
