@@ -149,7 +149,7 @@ int main(int argc, char** argv)
         cout << "Usage as <size of field> <port> <number of workers>" << endl;
         return 0;
     }
-
+    srand(10);
     struct sigaction sa;
     sa.sa_flags = SA_SIGINFO;
     sigemptyset(&sa.sa_mask);
@@ -200,7 +200,7 @@ int main(int argc, char** argv)
     {
         cout << "in iteration" << endl;
         Iteration();
-        usleep(200 * 1000);
+        usleep(20 * 1000);
         for (int i = 0; i < field_size; i++)
         {
             for (int j = 0; j < field_size; j++)

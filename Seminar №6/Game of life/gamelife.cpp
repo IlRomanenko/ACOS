@@ -11,7 +11,7 @@
 using namespace std;
 using namespace visualizer;
 
-const int maxn = 312, thread_count = 4;
+const int maxn = 20, thread_count = 4;
 const int part = maxn / thread_count;
 
 
@@ -66,7 +66,7 @@ inline void set(int x, int y, bool **from, bool** to)
 void render()
 {
     glClear(GL_COLOR_BUFFER_BIT);
-    sem_wait(&semap_end);
+    //sem_wait(&semap_end);
 
     double len = Map_Width / (double)maxn;
     SetColor(0.0, 1.0, 0.5);
@@ -76,7 +76,7 @@ void render()
             if (cur_life[i][j])
                 DrawRectangle(i * len, j * len, len, len);
         }
-    sem_post(&semap_end);
+    //sem_post(&semap_end);
     glutSwapBuffers();
 }
 
@@ -102,7 +102,8 @@ void* recalc(void * data)
 }
 
 int main(int argc, char** argv)
-{   
+{  
+    srand(10); 
     pthread_t temp;
 
 
